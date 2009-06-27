@@ -8,7 +8,8 @@ EXTRA_DIST = \
 	ChangeLog \
 	autogen.sh \
 	configure.ac \
-	libnotify.pc.in
+	libnotify.pc.in \
+	libnotify-uninstalled.pc.in
 
 $(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)

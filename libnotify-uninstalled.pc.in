@@ -1,0 +1,8 @@
+
+Name: libnotify
+Description: Notifications Library
+Requires:
+Version: @VERSION@
+Libs: ${pc_top_builddir}/${pcfiledir}/libnotify/libnotify.la
+Cflags: -I${pc_top_builddir}/${pcfiledir}
+

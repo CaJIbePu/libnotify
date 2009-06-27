@@ -132,6 +132,7 @@ AC_CONFIG_FILES([
 Makefile
 docs/Makefile
 docs/reference/Makefile
+libnotify-uninstalled.pc
 libnotify.pc
 libnotify/Makefile
 tests/Makefile
