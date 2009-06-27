@@ -26,10 +26,9 @@
 #include <libnotify/notify.h>
 #include <libnotify/internal.h>
 
-#include <gtk/gtkversion.h>
+#include <gtk/gtk.h>
 #if GTK_CHECK_VERSION(2, 9, 2)
 # define HAVE_STATUS_ICON
-# include <gtk/gtkstatusicon.h>
 #endif
 #include <gdk/gdkx.h>
 
