@@ -35,7 +35,8 @@ static GList *_active_notifications = NULL;
 
 /**
  * notify_init:
- * @app_name: The name of the application initializing libnotify.
+ * @app_name: (type utf8) (direction in): The name of the application 
+ *     initializing libnotify.
  *
  * Initialized libnotify. This must be called before any other functions.
  *
@@ -175,7 +176,8 @@ _notify_get_g_proxy(void)
  *
  * Queries the server for its capabilities and returns them in a #GList.
  *
- * Returns: A #GList of server capability strings.
+ * Returns: (element-type utf8) (transfer full): A #GList of 
+ *        server capability strings.
  */
 GList *
 notify_get_server_caps(void)
@@ -208,11 +210,11 @@ notify_get_server_caps(void)
 
 /**
  * notify_get_server_info:
- * @ret_name: The resulting server name.
- * @ret_vendor: The resulting server vendor.
- * @ret_version: The resulting server version.
- * @ret_spec_version: The resulting version of the specification the server is
- *                    compliant with.
+ * @ret_name: (out) (transfer full): The resulting server name.
+ * @ret_vendor: (out) (transfer full): The resulting server vendor.
+ * @ret_version: (out) (transfer full): The resulting server version.
+ * @ret_spec_version: (out) (transfer full): The resulting version of the 
+ *                    specification the server is compliant with.
  *
  * Queries the server for its information, specifically, the name, vendor,
  * server version, and the version of the notifications specification that it

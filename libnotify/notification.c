@@ -519,7 +519,7 @@ _idle_check_updates(void *user_data)
  * @summary: The required summary text.
  * @body: The optional body text.
  * @icon: The optional icon theme icon name or filename.
- * @attach: The optional widget to attach to.
+ * @attach: (allow-none): The optional widget to attach to.
  *
  * Creates a new #NotifyNotification. The summary text is required, but
  * all other parameters are optional.
