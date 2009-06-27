@@ -87,3 +87,33 @@ INCLUDES = \
 	-I$(top_srcdir) \
 	-DG_LOG_DOMAIN=\"libnotify\" \
 	$(PACKAGE_CFLAGS)
+
+if HAVE_INTROSPECTION
+
+BUILT_GIRSOURCES =
+Notify-0.4.gir: $(INTROSPECTION_SCANNER) libnotify.la
+	$(INTROSPECTION_SCANNER) -v --namespace Notify --nsversion=0.4 \
+	    $(INCLUDES) \
+	    --include=Gtk-2.0 \
+	    --library=notify \
+	    --libtool="$(LIBTOOL)" \
+	    --pkg gtk+-2.0 \
+	    --output $@ \
+	    notify.c notification.c
+BUILT_GIRSOURCES += Notify-0.4.gir
+
+# INTROSPECTION_GIRDIR/INTROSPECTION_TYPELIBDIR aren't the right place to install
+# thing - we need to install inside our prefix.
+girdir = $(datadir)/gir-1.0
+gir_DATA = $(BUILT_GIRSOURCES)
+
+typelibsdir = $(libdir)/girepository-1.0/
+typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
+
+%.typelib: %.gir $(INTROSPECTION_COMPILER)
+	$(DEBUG) $(INTROSPECTION_COMPILER) --includedir=$(srcdir) --includedir=. $(INTROSPECTION_COMPILER_OPTS) $< -o $(builddir)/$(@F)
+
+CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)
+
+endif
+

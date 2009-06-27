@@ -1,5 +1,7 @@
 SUBDIRS = libnotify docs tools tests
 
+ACLOCAL_AMFLAGS = -I m4
+
 pcdata_DATA = libnotify.pc
 pcdatadir = $(libdir)/pkgconfig
 
@@ -9,7 +11,8 @@ EXTRA_DIST = \
 	autogen.sh \
 	configure.ac \
 	libnotify.pc.in \
-	libnotify-uninstalled.pc.in
+	libnotify-uninstalled.pc.in \
+	m4/introspection.m4
 
 $(OBJECTS): libtool
 libtool: $(LIBTOOL_DEPS)

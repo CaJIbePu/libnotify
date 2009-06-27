@@ -1,4 +1,4 @@
-/**
+/*
  * @file libnotify/notify.h Notifications library
  *
  * @Copyright (C) 2004-2006 Christian Hammond

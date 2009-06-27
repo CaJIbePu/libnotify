@@ -43,7 +43,7 @@ echo "Generating configuration files for $PACKAGE, please wait..."
 echo "  libtoolize --copy --force"
 libtoolize --copy --force
 echo "  aclocal $ACLOCAL_FLAGS"
-aclocal $ACLOCAL_FLAGS
+aclocal -I m4 $ACLOCAL_FLAGS
 echo "  gtkdocize"
 gtkdocize
 echo "  autoheader"
@@ -63,5 +63,5 @@ else
 		trap 'echo "configure aborted" ; exit 0' 1 2 15
 		sleep 1
 	fi
-	./configure "$@";
+	./configure --enable-maintainer-mode "$@";
 fi

@@ -1,4 +1,4 @@
-/**
+/*
  * @file libnotify/notify.c Notifications library
  *
  * @Copyright (C) 2004-2006 Christian Hammond <chipx86@chipx86.com>

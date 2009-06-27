@@ -7,7 +7,7 @@ AC_INIT(libnotify, 0.4.5, chipx86@chipx86.com)
 AC_PREREQ(2.50)
 AC_CONFIG_SRCDIR(config.h.in)
 AC_COPYRIGHT([Copyright 2004-2008 Christian Hammond])
-
+AC_CONFIG_MACRO_DIR([m4])
 
 dnl ################################################################
 dnl # Version information
@@ -115,8 +115,12 @@ AC_DEFINE_UNQUOTED(DBUS_API_SUBJECT_TO_CHANGE, ,DBUS API is subject to change)
 dnl ################################################################
 dnl # Set up gtk-doc
 dnl ################################################################
-GTK_DOC_CHECK([1.4])
+GTK_DOC_CHECK([1.10])
 
+dnl ################################################################
+dnl # GObject-Introspection
+dnl ################################################################
+GOBJECT_INTROSPECTION_CHECK([0.6.3])
 
 dnl # Use wall if we have GCC
 if test "x$GCC" = "xyes"; then
@@ -147,4 +151,5 @@ echo $PACKAGE v$VERSION
 echo
 echo "Now type make to compile"
 echo "Then su to root and type: make install"
+echo "Introspection data:             ${enable_introspection}"
 echo

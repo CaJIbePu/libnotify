@@ -10,5 +10,8 @@
     <title>Libnotify</title>
     <xi:include href="xml/notify.xml"/>
     <xi:include href="xml/notification.xml"/>
+    <xi:include href="xml/annotation-glossary.xml">
+      <xi:fallback />
+    </xi:include>
   </chapter>
 </book>
