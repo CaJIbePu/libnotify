@@ -42,9 +42,9 @@ dnl #  ? : +1 :  ?   == internal changes that doesn't break anything.
 dnl #
 dnl # CURRENT : REVISION : AGE
 dnl #
-LT_CURRENT=2
-LT_REVISION=3
-LT_AGE=1
+LT_CURRENT=3
+LT_REVISION=0
+LT_AGE=2
 
 LT_RELEASE=$LIBGALAGO_MAJOR_VERSION.$LIBGALAGO_MINOR_VERSION.$LIBGALAGO_MICRO_VERSION
 

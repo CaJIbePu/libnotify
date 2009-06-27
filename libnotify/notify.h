@@ -68,6 +68,16 @@ const gchar *notify_get_app_name(void);
 GList *notify_get_server_caps(void);
 
 /**
+ * convenience function that checks if server has a certain capability
+ *
+ * @param capability	The capability to test for
+
+ * @return 		TRUE if the current notification server has the capability
+ * 			otherwise FALSE.
+ */
+gboolean notify_has_server_cap(const char* capability);
+
+/**
  * Returns the server notification information.
  *
  * The strings returned must be freed.

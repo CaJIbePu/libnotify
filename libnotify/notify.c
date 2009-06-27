@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
+#include <string.h>
 #include <unistd.h>
 #include <libnotify/notify.h>
 #include <libnotify/internal.h>
@@ -206,6 +207,31 @@ notify_get_server_caps(void)
 	g_strfreev(caps);
 
 	return result;
+}
+
+/**
+ * convenience function that checks if server has a certain capability
+ *
+ * @param capability	The capability to test for
+
+ * @return 		TRUE if the current notification server has the capability
+ * 			otherwise FALSE.
+ */
+gboolean
+notify_has_server_cap(const char* capability)
+{
+	GList *caps;
+	gboolean has_cap;
+
+	g_return_val_if_fail(capability, FALSE);
+
+       caps = notify_get_server_caps();
+	has_cap = g_list_find_custom(caps, capability, strcmp) != NULL;
+
+	g_list_foreach(caps, (GFunc)g_free, NULL);
+	g_list_free(caps);
+
+	return has_cap;
 }
 
 /**
