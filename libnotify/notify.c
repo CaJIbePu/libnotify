@@ -30,9 +30,28 @@
 
 static gboolean _initted = FALSE;
 static gchar *_app_name = NULL;
-static DBusGProxy *_proxy = NULL;
+/* org.freedesktop.Notifications proxy */
+static DBusGProxy *_proxy = NULL; 
+/* org.freedesktop.DBus proxy */
+static DBusGProxy *_proxy_for_dbus = NULL;
 static DBusGConnection *_dbus_gconn = NULL;
 static GList *_active_notifications = NULL;
+
+static void
+notify_name_owner_changed (DBusGProxy   *proxy,
+			   const char   *name,
+			   const char   *prev_owner,
+			   const char   *new_owner,
+			   gpointer     *user_data)
+{
+	if (strcmp (name, NOTIFY_DBUS_NAME) == 0) 
+	{
+		if (new_owner != NULL || *new_owner != 0)
+		{
+			/* drop caches */
+		}
+	}
+}
 
 /**
  * notify_init:
@@ -72,6 +91,10 @@ notify_init(const char *app_name)
 									   NOTIFY_DBUS_NAME,
 									   NOTIFY_DBUS_CORE_OBJECT,
 									   NOTIFY_DBUS_CORE_INTERFACE);
+	_proxy_for_dbus = dbus_g_proxy_new_for_name (bus, 
+							DBUS_SERVICE_DBUS,
+							DBUS_PATH_DBUS,
+							DBUS_INTERFACE_DBUS);
 	dbus_g_connection_unref(bus);
 
 	dbus_g_object_register_marshaller(notify_marshal_VOID__UINT_UINT,
@@ -84,12 +107,22 @@ notify_init(const char *app_name)
 									  G_TYPE_UINT,
 									  G_TYPE_STRING, G_TYPE_INVALID);
 
+	/* notification signals */
 	dbus_g_proxy_add_signal(_proxy, "NotificationClosed",
 							G_TYPE_UINT, G_TYPE_UINT, 
 							G_TYPE_INVALID);
 	dbus_g_proxy_add_signal(_proxy, "ActionInvoked",
 							G_TYPE_UINT, G_TYPE_STRING,
 							G_TYPE_INVALID);
+
+	/* dbus signals */
+	dbus_g_proxy_add_signal (_proxy_for_dbus, "NameOwnerChanged",
+				 G_TYPE_STRING, G_TYPE_STRING,
+				 G_TYPE_STRING, G_TYPE_INVALID);
+
+	dbus_g_proxy_connect_signal (_proxy_for_dbus, "NameOwnerChanged",
+				     G_CALLBACK (notify_name_owner_changed),
+				     NULL, NULL);
 
 	_initted = TRUE;
 
@@ -143,6 +176,7 @@ notify_uninit(void)
 	}
 
 	g_object_unref(_proxy);
+	g_object_unref(_proxy_for_dbus);
 
 	_initted = FALSE;
 }
@@ -226,7 +260,7 @@ notify_has_server_cap(const char* capability)
 
 	g_return_val_if_fail(capability, FALSE);
 
-       caps = notify_get_server_caps();
+	caps = notify_get_server_caps();
 	has_cap = g_list_find_custom(caps, capability, strcmp) != NULL;
 
 	g_list_foreach(caps, (GFunc)g_free, NULL);
