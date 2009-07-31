@@ -1010,8 +1010,10 @@ notify_notification_set_icon_from_pixbuf(NotifyNotification *notification,
 	g_value_init(value, G_TYPE_VALUE_ARRAY);
 	g_value_set_boxed_take_ownership(value, image_struct);
 
+	char *hint_name = _notify_check_spec_version(0, 10)
+	                  ? "image_data" : "icon_data";
 	g_hash_table_insert(notification->priv->hints,
-						g_strdup("icon_data"), value);
+						g_strdup(hint_name), value);
 #else /* D-BUS < 0.60 */
 	g_warning("Raw images and pixbufs require D-BUS >= 0.60");
 #endif
