@@ -62,8 +62,7 @@ notify_name_owner_changed (DBusGProxy   *proxy,
 			   gpointer     *user_data)
 {
 	if ((strcmp (name, NOTIFY_DBUS_NAME) == 0) && 
-            ((new_owner != NULL || *new_owner != '\0') && 
-            _server_caps != NULL))
+            (new_owner != NULL || *new_owner != '\0'))
 	{
 		reload_cached_data ();
 	}
