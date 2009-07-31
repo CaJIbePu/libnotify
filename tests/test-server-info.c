@@ -57,5 +57,7 @@ main(int argc, char **argv)
 	g_list_foreach(caps, (GFunc)g_free, NULL);
 	g_list_free(caps);
 
+	printf("Server supports 'actions': %s\n", notify_has_server_cap ("actions") ? "Yes" : "No");
+
 	return 0;
 }

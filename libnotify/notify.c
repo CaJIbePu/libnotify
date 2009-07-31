@@ -29,13 +29,30 @@
 #include <libnotify/notify-marshal.h>
 
 static gboolean _initted = FALSE;
+/* cached data */
 static gchar *_app_name = NULL;
+static GList *_server_caps = NULL;
+static gchar *_server_name = NULL;
+static gchar *_server_version = NULL;
+static gchar *_server_vendor = NULL;
+static gchar *_server_spec_version = NULL;
+
 /* org.freedesktop.Notifications proxy */
 static DBusGProxy *_proxy = NULL; 
 /* org.freedesktop.DBus proxy */
 static DBusGProxy *_proxy_for_dbus = NULL;
 static DBusGConnection *_dbus_gconn = NULL;
 static GList *_active_notifications = NULL;
+
+static void     notify_get_server_caps_internal (void);
+static gboolean notify_get_server_info_internal (void);
+
+static void
+reload_cached_data (void)
+{
+	notify_get_server_caps_internal ();
+	notify_get_server_info_internal ();
+}
 
 static void
 notify_name_owner_changed (DBusGProxy   *proxy,
@@ -44,12 +61,11 @@ notify_name_owner_changed (DBusGProxy   *proxy,
 			   const char   *new_owner,
 			   gpointer     *user_data)
 {
-	if (strcmp (name, NOTIFY_DBUS_NAME) == 0) 
+	if ((strcmp (name, NOTIFY_DBUS_NAME) == 0) && 
+            ((new_owner != NULL || *new_owner != '\0') && 
+            _server_caps != NULL))
 	{
-		if (new_owner != NULL || *new_owner != 0)
-		{
-			/* drop caches */
-		}
+		reload_cached_data ();
 	}
 }
 
@@ -124,6 +140,8 @@ notify_init(const char *app_name)
 				     G_CALLBACK (notify_name_owner_changed),
 				     NULL, NULL);
 
+	reload_cached_data ();
+
 	_initted = TRUE;
 
 	return TRUE;
@@ -162,6 +180,13 @@ notify_uninit(void)
 	{
 		g_free(_app_name);
 		_app_name = NULL;
+	}
+
+	if (_server_caps != NULL)
+	{
+		g_list_foreach (_server_caps, (GFunc)g_free, NULL);
+		g_list_free (_server_caps);
+		_server_caps = NULL;
 	}
 
 	for (l = _active_notifications; l != NULL; l = l->next)
@@ -206,23 +231,16 @@ _notify_get_g_proxy(void)
 	return _proxy;
 }
 
-/**
- * notify_get_server_caps:
- *
- * Queries the server for its capabilities and returns them in a #GList.
- *
- * Returns: (element-type utf8) (transfer full): A #GList of 
- *        server capability strings.
- */
-GList *
-notify_get_server_caps(void)
+static void
+notify_get_server_caps_internal (void)
 {
 	GError *error = NULL;
 	char **caps = NULL, **cap;
 	GList *result = NULL;
-	DBusGProxy *proxy = _notify_get_g_proxy();
+	DBusGProxy *proxy;
 
-	g_return_val_if_fail(proxy != NULL, NULL);
+	proxy = _notify_get_g_proxy();
+	g_return_if_fail(proxy != NULL);
 
 	if (!dbus_g_proxy_call(proxy, "GetCapabilities", &error,
 						   G_TYPE_INVALID,
@@ -230,7 +248,7 @@ notify_get_server_caps(void)
 	{
 		g_message("GetCapabilities call failed: %s", error->message);
 		g_error_free(error);
-		return NULL;
+		return;
 	}
 
 	for (cap = caps; *cap != NULL; cap++)
@@ -239,6 +257,30 @@ notify_get_server_caps(void)
 	}
 
 	g_strfreev(caps);
+
+	_server_caps = result;
+}
+
+/**
+ * notify_get_server_caps:
+ *
+ * Queries the server for its capabilities and returns them in a #GList.
+ *
+ * Returns: (element-type utf8) (transfer full): A #GList of 
+ *        server capability strings. The contents of this list should be 
+ *        freed with g_free(), and the list freed with g_list_free().
+ */
+GList *
+notify_get_server_caps(void)
+{
+	GList *l, *result = NULL;
+
+	g_return_val_if_fail (_server_caps != NULL, NULL);
+
+	for (l = _server_caps; l; l = l->next)
+	{
+		result = g_list_append (result, g_strdup (l->data));
+	}
 
 	return result;
 }
@@ -261,12 +303,48 @@ notify_has_server_cap(const char* capability)
 	g_return_val_if_fail(capability, FALSE);
 
 	caps = notify_get_server_caps();
-	has_cap = g_list_find_custom(caps, capability, strcmp) != NULL;
+	has_cap = g_list_find_custom(caps, (gconstpointer)capability, (GCompareFunc)strcmp) != NULL;
 
 	g_list_foreach(caps, (GFunc)g_free, NULL);
 	g_list_free(caps);
 
 	return has_cap;
+}
+
+static gboolean
+notify_get_server_info_internal (void)
+{
+	char *name, *vendor, *version, *spec_version;
+	GError *error = NULL;
+	DBusGProxy *proxy;
+	{
+		proxy = _notify_get_g_proxy();
+		g_return_val_if_fail(proxy != NULL, FALSE);
+
+		if (!dbus_g_proxy_call(proxy, "GetServerInformation", &error,
+						   G_TYPE_INVALID,
+						   G_TYPE_STRING, &name,
+						   G_TYPE_STRING, &vendor,
+						   G_TYPE_STRING, &version,
+						   G_TYPE_STRING, &spec_version,
+						   G_TYPE_INVALID))
+		{
+			g_message("GetServerInformation call failed: %s", error->message);
+			return FALSE;
+		}
+	}
+
+	g_free (_server_name);
+	g_free (_server_vendor);
+	g_free (_server_version);
+	g_free (_server_spec_version);
+
+	_server_name = name;
+	_server_vendor = vendor;
+	_server_version = version;
+	_server_spec_version = spec_version;
+
+	return TRUE;
 }
 
 /**
@@ -288,35 +366,35 @@ gboolean
 notify_get_server_info(char **ret_name, char **ret_vendor,
 					   char **ret_version, char **ret_spec_version)
 {
-	GError *error = NULL;
-	DBusGProxy *proxy = _notify_get_g_proxy();
-	char *name, *vendor, *version, *spec_version;
+	gboolean needs_name, needs_vendor, needs_version, needs_spec_version;
+	gboolean retval;
 
-	g_return_val_if_fail(proxy != NULL, FALSE);
+	retval = TRUE;
+	needs_name = (ret_name != NULL);
+	needs_vendor = (ret_vendor != NULL);
+	needs_version = (ret_version != NULL);
+	needs_spec_version = (ret_spec_version != NULL);
 
-	if (!dbus_g_proxy_call(proxy, "GetServerInformation", &error,
-						   G_TYPE_INVALID,
-						   G_TYPE_STRING, &name,
-						   G_TYPE_STRING, &vendor,
-						   G_TYPE_STRING, &version,
-						   G_TYPE_STRING, &spec_version,
-						   G_TYPE_INVALID))
-	{
-		g_message("GetServerInformation call failed: %s", error->message);
+	if ((needs_name && _server_name == NULL) ||
+            (needs_vendor && _server_vendor == NULL) ||
+	    (needs_version && _server_vendor == NULL) ||
+	    (needs_spec_version && _server_spec_version == NULL))
+		retval = notify_get_server_info_internal ();
+
+	if (!retval)
 		return FALSE;
-	}
 
 	if (ret_name != NULL)
-		*ret_name = name;
+		*ret_name = g_strdup (_server_name);
 
 	if (ret_vendor != NULL)
-		*ret_vendor = vendor;
+		*ret_vendor = g_strdup (_server_vendor);
 
 	if (ret_version != NULL)
-		*ret_version = version;
+		*ret_version = g_strdup (_server_version);
 
-	if (spec_version != NULL)
-		*ret_spec_version = spec_version;
+	if (ret_spec_version != NULL)
+		*ret_spec_version = g_strdup (_server_spec_version);	
 
 	return TRUE;
 }
