@@ -176,11 +176,20 @@ notify_uninit(void)
 	if (!_initted)
 		return;
 
-	if (_app_name != NULL)
-	{
-		g_free(_app_name);
-		_app_name = NULL;
-	}
+	g_free(_app_name);
+	_app_name = NULL;
+
+	g_free(_server_name);
+	_server_name = NULL;
+
+	g_free(_server_version);
+	_server_version = NULL;
+
+	g_free(_server_vendor);
+	_server_vendor = NULL;
+
+	g_free(_server_spec_version);
+	_server_spec_version = NULL;
 
 	if (_server_caps != NULL)
 	{
