@@ -12,7 +12,8 @@ noinst_PROGRAMS = \
 	test-urgency \
 	test-xy \
 	test-xy-actions \
-	test-xy-stress
+	test-xy-stress \
+	test-arabic
 
 common_ldflags = \
 	$(top_builddir)/libnotify/libnotify.la \
@@ -60,6 +61,9 @@ test_xy_actions_LDADD = $(common_ldflags)
 
 test_xy_stress_SOURCES = test-xy-stress.c
 test_xy_stress_LDADD = $(common_ldflags)
+
+test_arabic_SOURCES = test-arabic.c
+test_arabic_LDADD = $(common_ldflags)
 
 EXTRA_DIST = applet-critical.png
 
