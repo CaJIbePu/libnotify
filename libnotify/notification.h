@@ -127,6 +127,9 @@ void notify_notification_set_urgency(NotifyNotification *notification,
 void notify_notification_set_icon_from_pixbuf(NotifyNotification *notification,
 											  GdkPixbuf *icon);
 
+void notify_notification_set_image_from_pixbuf(NotifyNotification *notification,
+											   GdkPixbuf *image);
+
 void notify_notification_set_hint_int32(NotifyNotification *notification,
 										const gchar *key, gint value);
 void notify_notification_set_hint_uint32(NotifyNotification *notification,
