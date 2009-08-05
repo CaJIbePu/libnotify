@@ -57,14 +57,14 @@ _notify_check_spec_version(int major, int minor)
 }
 
 static gboolean
-_notify_update_spec_version(void)
+notify_update_spec_version (void)
 {
-	char* spec_version;
+	char *spec_version;
 	if (!notify_get_server_info(NULL, NULL, NULL, &spec_version))
 		return FALSE;
 
-	sscanf(spec_version, "%d.%d", &_spec_version_major, &_spec_version_minor);
-	g_free(spec_version);
+	sscanf (spec_version, "%d.%d", &_spec_version_major, &_spec_version_minor);
+	g_free (spec_version);
 	return TRUE;
 }
 
@@ -76,6 +76,7 @@ reload_cached_data (void)
 {
 	notify_get_server_caps_internal ();
 	notify_get_server_info_internal ();
+	notify_update_spec_version ();
 }
 
 static void
@@ -105,7 +106,6 @@ gboolean
 notify_init(const char *app_name)
 {
 	GError *error = NULL;
-	DBusGConnection *bus = NULL;
 
 	g_return_val_if_fail(app_name != NULL, FALSE);
 	g_return_val_if_fail(*app_name != '\0', FALSE);
@@ -117,7 +117,7 @@ notify_init(const char *app_name)
 
 	g_type_init();
 
-	bus = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
+	_dbus_gconn = dbus_g_bus_get(DBUS_BUS_SESSION, &error);
 
 	if (error != NULL)
 	{
@@ -126,15 +126,14 @@ notify_init(const char *app_name)
 		return FALSE;
 	}
 
-	_proxy = dbus_g_proxy_new_for_name(bus,
+	_proxy = dbus_g_proxy_new_for_name(_dbus_gconn,
 									   NOTIFY_DBUS_NAME,
 									   NOTIFY_DBUS_CORE_OBJECT,
 									   NOTIFY_DBUS_CORE_INTERFACE);
-	_proxy_for_dbus = dbus_g_proxy_new_for_name (bus, 
+	_proxy_for_dbus = dbus_g_proxy_new_for_name (_dbus_gconn, 
 							DBUS_SERVICE_DBUS,
 							DBUS_PATH_DBUS,
 							DBUS_INTERFACE_DBUS);
-	dbus_g_connection_unref(bus);
 
 	dbus_g_object_register_marshaller(notify_marshal_VOID__UINT_UINT,
 									  G_TYPE_NONE,
@@ -164,12 +163,6 @@ notify_init(const char *app_name)
 				     NULL, NULL);
 
 	reload_cached_data ();
-
-	if (!_notify_update_spec_version())
-	{
-		g_message("Error getting spec version");
-		return FALSE;
-	}
 
 	_initted = TRUE;
 
@@ -240,6 +233,8 @@ notify_uninit(void)
 
 	g_object_unref(_proxy);
 	g_object_unref(_proxy_for_dbus);
+
+	dbus_g_connection_unref(_dbus_gconn);
 
 	_initted = FALSE;
 }
